@@ -5,23 +5,27 @@ import 'package:flutter/material.dart';
 class RidePreferenceState extends ChangeNotifier {
   final RidePreferenceRepository repository;
 
-  RidePreference? _current;
+  RidePreference? _currentPreference;
   List<RidePreference> _history = [];
 
   RidePreferenceState(this.repository);
 
-  RidePreference? get current => _current;
-  List<RidePreference> get history => _history;
+  RidePreference? get current => _currentPreference;
+  List<RidePreference> get history => List.unmodifiable(_history);
 
   Future<void> loadHistory() async {
     _history = await repository.getHistory();
     notifyListeners();
   }
 
-  void selectPreference(RidePreference newPref) {
-    if (_current != newPref) {
-      _current = newPref;
-      _history.add(newPref);
+  void selectPreference(RidePreference preference) {
+    if (_currentPreference != preference) {
+      _currentPreference = preference;
+
+      if (!_history.contains(preference)) {
+        _history.insert(0, preference);
+      }
+
       notifyListeners();
     }
   }
