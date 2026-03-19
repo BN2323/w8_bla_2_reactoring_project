@@ -1,25 +1,40 @@
 import 'package:blabla/data/repositories/ride/ride_repository.dart';
 import 'package:blabla/model/ride/ride.dart';
 import 'package:blabla/ui/states/ride_preference_state.dart';
+import 'package:flutter/material.dart';
 
-class RideSelectionViewModel {
+class RideSelectionViewModel extends ChangeNotifier {
   final RidePreferenceState state;
   final RideRepository repository;
+  List<Ride>? _rides;
 
-  List<Ride> rides = [];
+  RideSelectionViewModel(this.state, this.repository) {
+    state.addListener(notifyListeners);
 
-  RideSelectionViewModel(this.state, this.repository);
+    _init();
+  }
 
-  Future<void> loadRides() async {
+  List<Ride>? get rides => _rides;
+
+  Future<void> _init() async {
     final allRides = await repository.getRides();
 
     final pref = state.current;
     if (pref == null) return;
 
-    rides = allRides.where((ride) {
+   _rides = allRides.where((ride) {
       return ride.departureLocation == pref.departure &&
           ride.arrivalLocation == pref.arrival &&
           ride.availableSeats >= pref.requestedSeats;
     }).toList();
+
+    notifyListeners();
+  }
+
+
+  @override
+  void dispose() {
+    state.removeListener(notifyListeners);
+    super.dispose();
   }
 }
